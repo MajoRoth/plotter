@@ -54,7 +54,7 @@ The fitting parameters will be printed with std values
 
 and you will get the following graph
 
-![alt text](https://github.com/MajoRoth/rlc_lab/blob/main/graphs/graph%3A%20Phase%20%5Brad%5D%20as%20function%20of%20Frequency%20%5BKHz%5D.png "Graph")
+![alt text](https://github.com/MajoRoth/plotter/blob/main/graphs/rlc%20-%20Phase%20%5Brad%5D%20as%20function%20of%20Frequency%20%5BKHz%5D.png "Graph")
 
 ## `plot_data` Parameters
 - x_data
