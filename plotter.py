@@ -6,7 +6,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 FIGURE_WIDTH = 12
 FIGURE_HEIGHT = 12
 DOUBLE_FIGURE_HEIGHT = 20
@@ -20,6 +19,7 @@ mpl.rcParams['font.family'] = FONT
 mpl.rcParams['font.weight'] = FONT_WEIGHT
 plt.rcParams['font.size'] = FONT_SIZE
 plt.rcParams['axes.linewidth'] = LINE_WIDTH
+
 
 def print_fit_data(objective, popt, pcov):
     perr = np.sqrt(np.diag(pcov))
@@ -39,12 +39,19 @@ def plot_data(x_data: pd.DataFrame,
               residuals: bool = True,
               graph_dir_path: str = None,
               experiment_name: str = ""):
-
     # graph parameters
-    x_data_name = x_data.name.split()[0]
-    x_data_units = x_data.name.split()[1]
-    y_data_name = y_data.name.split()[0]
-    y_data_units = y_data.name.split()[1]
+    try:
+        x_data_name = x_data.name.split()[0]
+        x_data_units = x_data.name.split()[1]
+    except:
+        x_data_name = x_data.name
+        x_data_units = ""
+    try:
+        y_data_name = y_data.name.split()[0]
+        y_data_units = y_data.name.split()[1]
+    except:
+        y_data_name = y_data.name
+        y_data_units = ""
 
     # fit
     if fit_function is not None:
@@ -70,12 +77,13 @@ def plot_data(x_data: pd.DataFrame,
 
     fig.tight_layout(pad=4.0)
     graph_ax.plot(x_data, y_data, 'o', markersize=7, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
-               label='Measurement')
+                  label='Measurement')
     if fit_function is not None:
         graph_ax.plot(x_data, fit, '-', color='red', label="Fit", linewidth=3)
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
-    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32, fontweight="bold")
+    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32,
+                       fontweight="bold")
     graph_ax.legend(loc='best')
     graph_ax.grid()
 
