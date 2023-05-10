@@ -44,12 +44,19 @@ Now you can use `plot_data` to get the desired graph
 ```python
 plot_data(frequency, phase, phase_to_freq_fit, starting_points=phase_starting_point, bounds=phase_starting_bounds, residuals=True, save=False)
 ```
-
+The fitting parameters will be printed with std values
 And you will get the following graph
 
-![alt text](https://github.com/MajoRoth/rlc_lab/blob/main/graphs/rlc_phase_to_freq.png "Graph")
+![alt text](https://github.com/MajoRoth/rlc_lab/blob/main/graphs/graph%3A%20Phase%20%5Brad%5D%20as%20function%20of%20Frequency%20%5BKHz%5D.png "Graph")
 
 ## `plot_data` Parameters
+- x_data
+- y_data
+- fit_function
+- starting_points
+- bounds
+- residuals
+- save
 
 
 
