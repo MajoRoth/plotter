@@ -58,14 +58,14 @@ and you will get the following graph
 
 ## `plot_data` Parameters
 define N as the number of the data samples and T the number of the fitting parameters.
-- x_data: Pandas DataFrame of size N.
-- y_data: Pandas DataFrame of size N.
-- fit_function: the fitting function that gets as arguments the fitting parameters, f(x, a, b, ... ).
-- starting_points: optional, starting points for the fitting algorithm, should be list of size T.
-- bounds: optional, starting points for the fitting algorithm, should be tuple with 2 lists of size T.
-- residuals: boolean.
-- graph_dir_path: string, a path to the directory where you want to save the graphs. If not specified it pops up in the screen.
-- experiment_name: string, name of the experiment
+- **x_data:** Pandas DataFrame of size N.
+- **y_data:** Pandas DataFrame of size N.
+- **fit_function:** the fitting function that gets as arguments the fitting parameters, f(x, a, b, ... ).
+- **starting_points:** optional, starting points for the fitting algorithm, should be list of size T.
+- **bounds:** optional, starting points for the fitting algorithm, should be tuple with 2 lists of size T.
+- **residuals:** boolean.
+- **graph_dir_path:** string, a path to the directory where you want to save the graphs. If not specified it pops up in the screen.
+- **experiment_name:** string, name of the experiment
 
 
 
