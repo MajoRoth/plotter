@@ -20,7 +20,7 @@ from plotter import plot_data
 import numpy as np
 ```
 
-Extract your data from the csv using pandas. 
+Extract your data from the csv using pandas[^1]. 
 
 ```python
 data_path = './../data/rlc_analyzed.csv'
@@ -28,7 +28,7 @@ data_frame = read_csv(data_path)
 phase = data_frame["Phase [rad]"]
 frequency = data_frame["Frequency [KHz]"]
 ```
-Note that `plotter.py` uses the name of the columns for the titles of the graph. If you not happy with the column namings,
+[^1]: Note that `plotter.py` uses the name of the columns for the titles of the graph. If you not happy with the column namings,
 change it in the `.csv` or change it using pandas `phase.name = new_name`.
 
 Choose your fit function and define starting point and bounds if needed.
