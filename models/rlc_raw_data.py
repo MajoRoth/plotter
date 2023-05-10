@@ -22,10 +22,6 @@ data_path = './../data/rlc_raw.csv'
 data_frame = read_csv(data_path)
 data_frame = data_frame.drop(index=0)
 
-print(data_frame)
-
-
-
 
 time_ms = data_frame["Time"]
 amplitude = data_frame["Channel A"]
