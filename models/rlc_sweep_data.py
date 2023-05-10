@@ -30,7 +30,7 @@ def amp_to_freq_fit(x, a, b, c):
 
 amp_starting_point = [0.008, 0.001, 0.8]
 
-plot_data(frequency, phase, phase_to_freq_fit, starting_points=phase_starting_point, bounds=phase_starting_bounds, residuals=True, save=False)
+plot_data(frequency, phase, phase_to_freq_fit, starting_points=phase_starting_point, bounds=phase_starting_bounds, residuals=True, save=True)
 plot_data(frequency, amplitude, amp_to_freq_fit, starting_points=amp_starting_point, residuals=True, save=False)
 
 
