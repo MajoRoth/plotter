@@ -23,11 +23,12 @@ plt.rcParams['axes.linewidth'] = LINE_WIDTH
 
 def print_fit_data(objective, popt, pcov):
     perr = np.sqrt(np.diag(pcov))
-    print(f"printing [{objective.__name__}] fitting values")
+    print('\033[96m' + f"printing function [{objective.__name__}] fitting values" + "\033[0m")
+    print("parameter    value           std")
     for i, var in enumerate(objective.__code__.co_varnames[1:]):
         if (i == objective.__code__.co_argcount - 1):
             break
-        print(f"parameter {var} = {popt[i]}, with std={perr[i]}")
+        print("{:<12.3} {:<15.4} {:<10.4}".format(var, popt[i], perr[i]))
 
 
 def plot_data(x_data: pd.DataFrame,
@@ -36,7 +37,8 @@ def plot_data(x_data: pd.DataFrame,
               starting_points: List[float] = None,
               bounds: Tuple[Tuple, Tuple] = (-np.inf, np.inf),
               residuals: bool = True,
-              save: bool = False):
+              graph_dir_path: str = None,
+              experiment_name: str = ""):
 
     # graph parameters
     x_data_name = x_data.name.split()[0]
@@ -45,10 +47,14 @@ def plot_data(x_data: pd.DataFrame,
     y_data_units = y_data.name.split()[1]
 
     # fit
-    popt, pcov = curve_fit(f=fit_function, xdata=x_data, ydata=y_data, p0=starting_points, bounds=bounds)
-    fit = fit_function(x_data, *popt)
-    print_fit_data(fit_function, popt, pcov)
-    residuals_graph = y_data - fit
+    if fit_function is not None:
+        popt, pcov = curve_fit(f=fit_function, xdata=x_data, ydata=y_data, p0=starting_points, bounds=bounds)
+        fit = fit_function(x_data, *popt)
+        print_fit_data(fit_function, popt, pcov)
+        residuals_graph = y_data - fit
+    else:
+        # Cannot create residuals without fit
+        residuals = False
 
     # show graphs
     if residuals:
@@ -65,10 +71,11 @@ def plot_data(x_data: pd.DataFrame,
     fig.tight_layout(pad=4.0)
     graph_ax.plot(x_data, y_data, 'o', markersize=7, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
                label='Measurement')
-    graph_ax.plot(x_data, fit, '-', color='red', label="Fit", linewidth=3)
+    if fit_function is not None:
+        graph_ax.plot(x_data, fit, '-', color='red', label="Fit", linewidth=3)
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
-    graph_ax.set_title(f"{y_data_name} Measured as function of {x_data_name}", fontname="Arial", size=32, fontweight="bold")
+    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32, fontweight="bold")
     graph_ax.legend(loc='best')
     graph_ax.grid()
 
@@ -82,25 +89,7 @@ def plot_data(x_data: pd.DataFrame,
     plt.yticks(fontsize=20)
     plt.xticks(fontsize=20)
 
-    if save:
-        plt.savefig(f"graph: {y_data.name} as function of {x_data.name}", dpi=300)
-    else:
+    if graph_dir_path is None:
         plt.show()
-
-
-if __name__ == "__main__":
-    data_path = './../data/rlc_analyzed.csv'
-    # unpack data
-    data_frame = read_csv(data_path)
-
-    phase = -data_frame["Phase [rad]"]
-    amplitude = data_frame["Amplitude [V]"]
-    frequency = data_frame["Frequency [KHz]"]
-    def fit_function(x, a, b, c):
-        return -np.arctan((a * x - 1 / (b * x)) / (1.618)) + c
-
-
-    starting_points = [0.2769, 0.0003, 0]
-    bounds = ((-100, -np.inf, -np.inf), (np.inf, np.inf, np.inf))
-
-    plot_data(frequency, phase, fit_function, starting_points=starting_points, bounds=bounds, residuals=True, save=False)
+    else:
+        plt.savefig(f"{graph_dir_path}/{experiment_name} - {y_data.name} as function of {x_data.name}", dpi=300)
