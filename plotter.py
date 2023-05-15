@@ -56,9 +56,11 @@ def plot_data(x_data: pd.DataFrame,
     # fit
     if fit_function is not None:
         popt, pcov = curve_fit(f=fit_function, xdata=x_data, ydata=y_data, p0=starting_points, bounds=bounds)
-        fit = fit_function(x_data, *popt)
+        x_sample = np.linspace(x_data.iloc[0], x_data.iloc[-1], 1000)
+        fit = fit_function(x_sample, *popt)
+        fit_for_residuals = fit_function(x_data, *popt)
         print_fit_data(fit_function, popt, pcov)
-        residuals_graph = y_data - fit
+        residuals_graph = y_data - fit_for_residuals
     else:
         # Cannot create residuals without fit
         residuals = False
@@ -79,7 +81,7 @@ def plot_data(x_data: pd.DataFrame,
     graph_ax.plot(x_data, y_data, 'o', markersize=7, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
                   label='Measurement')
     if fit_function is not None:
-        graph_ax.plot(x_data, fit, '-', color='red', label="Fit", linewidth=3)
+        graph_ax.plot(x_sample, fit, '-', color='red', label="Fit", linewidth=3)
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
     graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32,
@@ -100,4 +102,5 @@ def plot_data(x_data: pd.DataFrame,
     if graph_dir_path is None or experiment_name is None:
         plt.show()
     else:
-        plt.savefig(f"{graph_dir_path}/{experiment_name} - {y_data.name} as function of {x_data.name}", dpi=300)
+        plt.savefig(f"{graph_dir_path}/{experiment_name}-{y_data.name}-{x_data.name}.eps"
+                    .replace(" ", "_").replace("{", "").replace("}", ""), format="eps")

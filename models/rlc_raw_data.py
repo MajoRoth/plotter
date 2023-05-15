@@ -18,6 +18,6 @@ amplitude = amplitude.astype(float)
 time_ms_normal.name = "Time [ms]"
 amplitude.name = "V_{out} [V]"
 
-plot_data(time_ms_normal, amplitude, None, graph_dir_path="./../graphs", experiment_name="rlc")
+plot_data(time_ms_normal, amplitude, None, graph_dir_path="./../graphs", experiment_name="rlc_raw")
 
 
