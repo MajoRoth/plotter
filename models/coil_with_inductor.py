@@ -3,8 +3,7 @@ from pandas import read_csv
 from plotter import plot_data
 
 # Data Settings
-# data_path = './../data/coil_with_resistor_22kohm.csv'
-data_path = './../data/R=47kOhm(big).csv'
+data_path = './../data/L=1mH(small).csv'
 # unpack data
 data_frame = read_csv(data_path)
 
@@ -13,13 +12,12 @@ amplitude = data_frame["amplitude"]
 frequency = data_frame["frequency [Hz]"] / 1000
 frequency.name = "frequency [kHz]"
 
-print(len(frequency))
-# frequency.name = "frequency [kHz]"
 
 def amplitude_to_freq_r_fit(x, L_c, C_c, R_cl):
     # C_s = 32.4 * 10 ** (-12)
     C_s = 5.5 * 10 ** (-11)
     R_ext = 470000
+    L_ext = 10 ** (-3)
 
     R_cp = np.inf
     R_cc = 0
@@ -30,7 +28,8 @@ def amplitude_to_freq_r_fit(x, L_c, C_c, R_cl):
 
     w = 2 * np.pi * x * 1000
 
-    Z_measure = (1/R_ext + 1j * w * C_s) ** (-1)
+    Z = 1j * w * L_ext
+    Z_measure = (1/Z + 1j * w * C_s) ** (-1)
 
     Z_coil = (1 / (R_cl + 1j * w * L_c) + 1 / (R_cc + 1 / (1j * w * C_c)) + 1 / R_cp) ** (-1)
 

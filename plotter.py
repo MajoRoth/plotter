@@ -1,6 +1,6 @@
 import pandas as pd
 from pandas import read_csv
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, least_squares
 from typing import List, Tuple
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ def print_fit_data(objective, popt, pcov):
     for i, var in enumerate(objective.__code__.co_varnames[1:]):
         if (i == objective.__code__.co_argcount - 1):
             break
-        print("{:<12.3} {:<15.4} {:<10.4}".format(var, popt[i], perr[i]))
+        print("{:<12.5} {:<15.4} {:<10.4}".format(var, popt[i], perr[i]))
 
 
 def plot_data(x_data: pd.DataFrame,
@@ -97,7 +97,7 @@ def plot_data(x_data: pd.DataFrame,
     plt.yticks(fontsize=20)
     plt.xticks(fontsize=20)
 
-    if graph_dir_path is None:
+    if graph_dir_path is None or experiment_name is None:
         plt.show()
     else:
         plt.savefig(f"{graph_dir_path}/{experiment_name} - {y_data.name} as function of {x_data.name}", dpi=300)
