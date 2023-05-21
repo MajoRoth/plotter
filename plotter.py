@@ -21,14 +21,35 @@ plt.rcParams['font.size'] = FONT_SIZE
 plt.rcParams['axes.linewidth'] = LINE_WIDTH
 
 
-def print_fit_data(objective, popt, pcov):
+def print_fit_data(fit, popt, pcov, xdata, ydata, normal_vec):
     perr = np.sqrt(np.diag(pcov))
-    print('\033[96m' + f"printing function [{objective.__name__}] fitting values" + "\033[0m")
-    print("parameter    value           std")
-    for i, var in enumerate(objective.__code__.co_varnames[1:]):
-        if (i == objective.__code__.co_argcount - 1):
+
+    real_popt = np.multiply(
+        np.power(10, normal_vec),
+        popt
+    )
+    residuals = ydata - fit(xdata, *real_popt)
+    ss_res = np.sum(residuals ** 2)
+    ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
+    r_squared = 1 - (ss_res / ss_tot)
+    k = 0
+
+    print('\033[96m' + f"printing function [{fit.__name__}] fitting values" + "\033[0m")
+    print('\033[1m' + "parameter    value           std         normal factor" + "\033[0m")
+    for i, var in enumerate(fit.__code__.co_varnames[1:]):
+        if (i == fit.__code__.co_argcount - 1):
             break
-        print("{:<12.5} {:<15.4} {:<10.4}".format(var, popt[i], perr[i]))
+        k += 1
+        print("{:<12.5} {:<15.4} {:<10.4}  {:<10.6}".format(var, popt[i], perr[i], normal_vec[i]))
+
+    n = len(xdata)  # num of observations
+    adjusted_r = 1 - (
+            (1 - r_squared) * (n-1) / (n - k - 1)
+    )
+    print('\033[92m' + f"printing fit parameters R^2: [{r_squared}] adjusted R^2: [{adjusted_r}]" + "\033[0m")
+
+def order_of_magnitude(number):
+    return np.floor(np.log10(number))
 
 
 def plot_data(x_data: pd.DataFrame,
@@ -55,11 +76,41 @@ def plot_data(x_data: pd.DataFrame,
 
     # fit
     if fit_function is not None:
-        popt, pcov = curve_fit(f=fit_function, xdata=x_data, ydata=y_data, p0=starting_points, bounds=bounds)
-        x_sample = np.linspace(x_data.iloc[0], x_data.iloc[-1], 1000)
-        fit = fit_function(x_sample, *popt)
-        fit_for_residuals = fit_function(x_data, *popt)
-        print_fit_data(fit_function, popt, pcov)
+        if starting_points is not None:
+            magnitude_list = order_of_magnitude(starting_points)
+            normalized_starting_points = np.multiply(
+                np.power(10, (-1) * magnitude_list),
+                starting_points
+            )
+            # normalized_bounds = np.multiply(
+            #     np.power(10, (-1) * magnitude_list),
+            #     bounds
+            # )
+            # normalized_bounds = [
+            #     [float(x) for x in normalized_bounds[0]],
+            #     [float(x) for x in normalized_bounds[1]]
+            # ]
+
+            def fit_function_normalizer(x, *args):
+                real_arguments = np.multiply(
+                    np.power(10, magnitude_list),
+                    args
+                )
+                return fit_function(x, *real_arguments)
+
+        else:
+            normalized_starting_points = None
+            normalized_bounds = None
+        popt, pcov = curve_fit(f=fit_function_normalizer, xdata=x_data, ydata=y_data, p0=normalized_starting_points,
+                               bounds=bounds)
+        x_sample = np.linspace(x_data.iloc[0]/2, x_data.iloc[-1], 1000)
+        real_popt = np.multiply(
+            np.power(10, magnitude_list),
+            popt
+        )
+        fit = fit_function(x_sample, *real_popt)
+        fit_for_residuals = fit_function(x_data, *real_popt)
+        print_fit_data(fit_function, popt, pcov, x_data, y_data, magnitude_list)
         residuals_graph = y_data - fit_for_residuals
     else:
         # Cannot create residuals without fit
@@ -82,6 +133,9 @@ def plot_data(x_data: pd.DataFrame,
                   label='Measurement')
     if fit_function is not None:
         graph_ax.plot(x_sample, fit, '-', color='red', label="Fit", linewidth=3)
+        # x_orange = np.linspace(x_data.iloc[0], x_data.iloc[-1] * 2, 1000)
+        # fit_for_y = fit_function(x_orange, *[10 ** (-3), 65 * 10 ** (-12), 100, 65 * 10 ** (-12)])
+        # graph_ax.plot(x_orange, fit_for_y, '-', color='orange', label="Fit for y", linewidth=3)
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
     graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32,

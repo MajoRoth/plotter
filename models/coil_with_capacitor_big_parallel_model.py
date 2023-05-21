@@ -8,8 +8,7 @@ data_path = './../data/C=1e-10F_R=47kOhm(big).csv'
 # unpack data
 data_frame = read_csv(data_path)
 
-# CIRCUIT_NAME = "coil_capacitor_47_big"
-CIRCUIT_NAME = None
+CIRCUIT_NAME = "coil_capacitor_47_parallel_model"
 
 phase = data_frame["phase [rad]"]
 amplitude = data_frame["amplitude"]
@@ -18,8 +17,7 @@ frequency.name = "frequency [kHz]"
 
 
 def amplitude_to_freq_r_fit(x, L_c, C_c, R_cl, C_s):
-    # C_s = 5.5 * 10 ** (-11)
-    R_ext = 470000
+    R_ext = 47000
     C_ext = 10 ** (-10)
 
     R_cp = np.inf
@@ -29,18 +27,19 @@ def amplitude_to_freq_r_fit(x, L_c, C_c, R_cl, C_s):
 
     Z = R_ext
     Z_measure = (1/Z + 1j * w * C_s) ** (-1)
-    Z_coil = (1 / (R_cl + 1j * w * L_c) + 1 / (R_cc + 1 / (1j * w * C_c)) + 1 / R_cp + 1j * w * C_ext) ** (-1)
+    Z_coil = (1 / (R_cl + 1j * w * L_c) + (1j * w * C_c) + 1 / R_cp + 1j * w * C_ext) ** (-1)
+    Z_coil = (1/R_cl + 1j * w * (C_c + C_ext) + 1/(1j * w * L_c))**(-1)
 
     return np.absolute(Z_measure / (Z_coil + Z_measure))
 
-starting_point = [0.00225, 343 * 10 ** (-12), 458, 7.5 * 10 ** (-12)]
-bounds = ((0, 0, 0, 0), np.array(starting_point) * 10000)
+starting_point = [2.313 * 10 ** (-3), 25.89 * 10 ** (-11), 10.76 * 10 ** (4), 7.89 * 10 ** (-11)]
+bounds = [[0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf]]
 
 plot_data(frequency, amplitude, fit_function=amplitude_to_freq_r_fit, starting_points=starting_point, bounds=bounds,
            graph_dir_path="./../graphs", experiment_name=CIRCUIT_NAME)
 
 
-def phase_to_freq_r_fit(x, L_c, C_c, R_cl, C_s):
+def phase_to_freq_r_fit(x, L_c, C_c, R_cl, C_s, const):
     # C_s = 5.5 * 10 ** (-11)
     R_ext = 470000
     C_ext = 10 ** (-10)
@@ -53,11 +52,15 @@ def phase_to_freq_r_fit(x, L_c, C_c, R_cl, C_s):
     Z = R_ext
     Z_measure = (1 / Z + 1j * w * C_s) ** (-1)
     Z_coil = (1 / (R_cl + 1j * w * L_c) + 1 / (R_cc + 1 / (1j * w * C_c)) + 1 / R_cp + 1j * w * C_ext) ** (-1)
+    Z_coil = (1/R_cl + 1j * w * (C_c + C_ext) + 1/(1j * w * L_c))**(-1)
 
-    return np.angle(Z_measure / (Z_coil + Z_measure))
 
-starting_point = [0.00225, 343 * 10 ** (-12), 458, 7.5 * 10 ** (-12)]
-bounds = ((0, 0, 0, 0), (np.inf, np.inf, np.inf, np.inf))
+    return -np.angle(Z_measure / (Z_coil + Z_measure)) - const
 
-plot_data(frequency, phase, fit_function=phase_to_freq_r_fit, starting_points=starting_point,
+starting_point = [2.313 * 10 ** (-3), 23 * 10 ** (-11), 18 * 10 ** (4), 5 * 10 ** (-11), 0.1]
+starting_point = [1.359 * 10 ** (-3), 48.22 * 10 ** (-11), 4 * 10 ** (4), 13 * 10 ** (-11), 0.1]
+
+bounds = ((0, 0, 0, 0, -np.inf), (np.inf, np.inf, np.inf, np.inf, np.inf))
+
+plot_data(frequency, phase, fit_function=phase_to_freq_r_fit, starting_points=starting_point, bounds=bounds,
            graph_dir_path="./../graphs", experiment_name=CIRCUIT_NAME)
