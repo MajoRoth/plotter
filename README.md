@@ -54,7 +54,7 @@ The fitting parameters will be printed with std values
 
 and you will get the following graph
 
-![alt text](https://github.com/MajoRoth/plotter/blob/main/graphs/rlc%20-%20Phase%20%5Brad%5D%20as%20function%20of%20Frequency%20%5BKHz%5D.png "Graph")
+![alt text](https://github.com/MajoRoth/plotter/blob/main/graphs/rlc-Phase_%5Brad%5D-Frequency_%5BKHz%5D.png "Graph")
 
 ## `plot_data` Parameters
 define N as the number of the data samples and T the number of the fitting parameters.
