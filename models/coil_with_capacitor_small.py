@@ -8,7 +8,7 @@ data_path = './../data/C=1e-10F_R=47kOhm(small).csv'
 data_frame = read_csv(data_path)
 
 CIRCUIT_NAME = "coil_capacitor_47_small"
-CIRCUIT_NAME = None
+# CIRCUIT_NAME = None
 
 phase = data_frame["phase [rad]"]
 amplitude = data_frame["amplitude"]

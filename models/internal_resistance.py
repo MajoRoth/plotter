@@ -4,6 +4,8 @@ from plotter import plot_data
 # Data Settings
 data_path = './../data/picoscope_internal_resistance_measurement_1KOhm.csv'
 
+experiment_name="internal_resistance"
+
 # preprocess data
 data_frame = read_csv(data_path)
 
@@ -18,6 +20,6 @@ def linear_fit(x, m, b):
      return m*x + b
 
 
-plot_data(v_in, v_out, linear_fit, graph_dir_path="./../graphs", experiment_name="internal_resistance")
+plot_data(v_in, v_out, linear_fit, graph_dir_path="./../graphs", experiment_name=experiment_name)
 
 

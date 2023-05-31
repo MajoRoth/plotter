@@ -8,7 +8,7 @@ import numpy as np
 
 FIGURE_WIDTH = 12
 FIGURE_HEIGHT = 12
-DOUBLE_FIGURE_HEIGHT = 20
+DOUBLE_FIGURE_HEIGHT = 18
 FONT = "Arial"
 FONT_WEIGHT = "bold"
 FONT_SIZE = 22
@@ -24,6 +24,9 @@ plt.rcParams['axes.linewidth'] = LINE_WIDTH
 def print_fit_data(fit, popt, pcov, xdata, ydata, normal_vec):
     perr = np.sqrt(np.diag(pcov))
 
+    if normal_vec is None:
+        normal_vec = np.zeros(len(popt))
+
     real_popt = np.multiply(
         np.power(10, normal_vec),
         popt
@@ -33,6 +36,7 @@ def print_fit_data(fit, popt, pcov, xdata, ydata, normal_vec):
     ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
     r_squared = 1 - (ss_res / ss_tot)
     k = 0
+
 
     print('\033[96m' + f"printing function [{fit.__name__}] fitting values" + "\033[0m")
     print('\033[1m' + "parameter    value           std         normal factor" + "\033[0m")
@@ -101,13 +105,20 @@ def plot_data(x_data: pd.DataFrame,
         else:
             normalized_starting_points = None
             normalized_bounds = None
+            fit_function_normalizer = fit_function
+            magnitude_list = None
+
         popt, pcov = curve_fit(f=fit_function_normalizer, xdata=x_data, ydata=y_data, p0=normalized_starting_points,
                                bounds=bounds)
-        x_sample = np.linspace(x_data.iloc[0]/2, x_data.iloc[-1], 1000)
-        real_popt = np.multiply(
-            np.power(10, magnitude_list),
-            popt
-        )
+        x_sample = np.linspace(x_data.iloc[0], x_data.iloc[-1], 1000)
+        try:
+            real_popt = np.multiply(
+                np.power(10, magnitude_list),
+                popt
+            )
+        except:
+            real_popt = popt
+
         fit = fit_function(x_sample, *real_popt)
         fit_for_residuals = fit_function(x_data, *real_popt)
         print_fit_data(fit_function, popt, pcov, x_data, y_data, magnitude_list)
@@ -118,19 +129,17 @@ def plot_data(x_data: pd.DataFrame,
 
     # show graphs
     if residuals:
-        plt.rcParams["figure.figsize"] = (FIGURE_WIDTH, DOUBLE_FIGURE_HEIGHT)
-
-        fig, ax = plt.subplots(2)
+        fig, ax = plt.subplots(2,1,figsize=(FIGURE_WIDTH, DOUBLE_FIGURE_HEIGHT), gridspec_kw={'height_ratios': [2, 1]})
         graph_ax = ax[0]
         residuals_ax = ax[1]
     else:
         plt.rcParams["figure.figsize"] = (FIGURE_WIDTH, FIGURE_HEIGHT)
-
         fig, graph_ax = plt.subplots(1)
 
     fig.tight_layout(pad=4.0)
     graph_ax.plot(x_data, y_data, 'o', markersize=7, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
                   label='Measurement')
+
     if fit_function is not None:
         graph_ax.plot(x_sample, fit, '-', color='red', label="Fit", linewidth=3)
         # x_orange = np.linspace(x_data.iloc[0], x_data.iloc[-1] * 2, 1000)
@@ -138,8 +147,7 @@ def plot_data(x_data: pd.DataFrame,
         # graph_ax.plot(x_orange, fit_for_y, '-', color='orange', label="Fit for y", linewidth=3)
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
-    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32,
-                       fontweight="bold")
+    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32, fontweight="bold")
     graph_ax.legend(loc='best')
     graph_ax.grid()
 
@@ -158,3 +166,53 @@ def plot_data(x_data: pd.DataFrame,
     else:
         plt.savefig(f"{graph_dir_path}/{experiment_name}-{y_data.name}-{x_data.name}.eps"
                     .replace(" ", "_").replace("{", "").replace("}", ""), format="eps")
+
+
+
+
+def plot_comparison(x1_data: pd.DataFrame,
+              y1_data: pd.DataFrame,
+              x2_data: pd.DataFrame,
+              y2_data: pd.DataFrame,
+              graph_dir_path: str = None,
+              experiment_name: str = ""):
+
+    try:
+        x_data_name = x1_data.name.split()[0]
+        x_data_units = x1_data.name.split()[1]
+    except:
+        x_data_name = x1_data.name
+        x_data_units = ""
+    try:
+        y_data_name = y1_data.name.split()[0]
+        y_data_units = y1_data.name.split()[1]
+    except:
+        y_data_name = y1_data.name
+        y_data_units = ""
+
+    plt.rcParams["figure.figsize"] = (FIGURE_WIDTH, FIGURE_HEIGHT)
+    fig, graph_ax = plt.subplots(1)
+
+    fig.tight_layout(pad=4.0)
+    graph_ax.plot(x1_data, y1_data, 'o', markersize=5, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
+                  label='$5.5[cm]$')
+
+    graph_ax.plot(x2_data, y2_data, 'o', markersize=5, markeredgewidth=1, color='red', markerfacecolor='yellow',
+                  label='$10[cm]$')
+
+    graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
+    graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
+    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32,
+                       fontweight="bold")
+    graph_ax.legend(loc='best')
+    graph_ax.grid()
+
+    plt.yticks(fontsize=20)
+    plt.xticks(fontsize=20)
+
+    if graph_dir_path is None or experiment_name is None:
+        plt.show()
+    else:
+        plt.savefig(f"{graph_dir_path}/{experiment_name}-{y1_data.name}-{x1_data.name}.eps"
+                    .replace(" ", "_").replace("{", "").replace("}", ""), format="eps")
+
