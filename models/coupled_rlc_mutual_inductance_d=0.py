@@ -3,8 +3,7 @@ from plotter import plot_data
 import numpy as np
 
 # Data Settings
-data_path = './../data/coupeled_again.csv'
-data_path = "./../data/coupeled_R=47kOhm.csv"
+data_path = './../data/d=0.csv'
 
 # preprocess data
 data_frame = read_csv(data_path)
@@ -17,15 +16,17 @@ freq = filtered_data_frame["Frequency [Hz]"]
 freq = freq / 1000
 freq.name = "Frequency [kHz]"
 
-experiment_name = None # "mutual_inductance"
+experiment_name = None # "coupled_d=0"  # "mutual_inductance"
 
 
-def amplitude_to_freq_fit(x, k, L1, L2, C1, Cs, R1, R2):
+def amplitude_to_freq_fit(x, m, L1, L2, C1, Cs, R1, R2, const):
     Rext = 47000
     # R1 = 57
     # R2 = 70
 
     # k, L1, L2, C1, Cs, R1, R2 = [0.4474, 0.0022, 0.00067, 26.58 * 10 ** (-11), 10 ** (-10), 90, 32.92]
+
+    k = m / np.sqrt(L1 * L2)
 
     w = 2 * np.pi * x * 1000
 
@@ -38,27 +39,36 @@ def amplitude_to_freq_fit(x, k, L1, L2, C1, Cs, R1, R2):
                      C1 * (L2 * R1 + L1 * R2)
                      + (C1 * L1 + Cs * L1 + C1 * L2 + C1 * (C1 + Cs) * R1 * R2) * Rext)) ** 2))
 
-    return ret
+    return ret + const
 
 
-starting_point = [0.2, 3.272 * 10 ** (-3), 0.001, 1.52 * 10 ** (-10), 10.17 * 10 ** (-11)]
-starting_point = [0.4712, 2.07 * 10 ** (-3), 6.47 * 10 ** (-4), 28.48 * 10 ** (-11), 9.996 * 10 ** (-11), 90, 32.92]
-starting_point = [0.4474, 0.0022, 0.00067, 26.58 * 10 ** (-11), 10 ** (-10), 90, 32.92]
+starting_point = [0.5041 * 10 ** (-3), 0.74 * 10 ** (-3), 1.76 * 10 ** (-3),
+                  34.05 * 10 ** (-11), 10.53 * 10 ** (-11),
+                  57.18, 85.38, 0.01]
 
-bounds = [(0, 0, 0, 0, 0, 0, 0), (np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)]
+bounds = [(0, 0, 0, 0, 0, 0, 0, -np.inf), (np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)]
 
-plot_data(freq, a, fit_function=amplitude_to_freq_fit, starting_points=starting_point, bounds=bounds,
+plot_data(freq, a, starting_points=starting_point, bounds=bounds,
           graph_dir_path="./../graphs", experiment_name=experiment_name)
 
 
-def phase_to_freq_fit(x, k, L1, L2, C1, Cs, const):
+
+
+
+def phase_to_freq_fit(x, m, L1, L2, C1, Cs, R1, R2, const):
     Rext = 47000
-    R1 = 57
-    R2 = 70
+    # R1 = 57
+    # R2 = 70
+
+    # k, L1, L2, C1, Cs, R1, R2, const = [0.64, 0.0022, 0.0005942, 35 * 10 ** (-11), 6 * 10 ** (-11), 200, 0.1, 0.1]
 
     w = 2 * np.pi * x * 1000
 
-    ret = np.pi - abs(np.angle(k * (L1 * L2) ** (1 / 2) * w * ((1j * (-1)) + Cs * Rext * w) * (
+    k = m / np.sqrt(L1 * L2)
+
+    w = 2 * np.pi * x * 1000
+
+    ret = abs(np.angle(k * (L1 * L2) ** (1 / 2) * w * ((1j * (-1)) + Cs * Rext * w) * (
                 (-1) * Rext + (1j * (-1)) * (L1 + C1 * R2 * Rext) * w + (
                     C1 * L1 * R2 + Cs * L1 * Rext + C1 * (L1 + L2) * Rext) * w ** 2 + 1j * C1 * (
                             (-1) * k ** 2 * L1 * L2 + L1 * (L2 + (C1 + Cs) * R2 * Rext)) * w ** 3 + (-1) * C1 * (
@@ -66,10 +76,6 @@ def phase_to_freq_fit(x, k, L1, L2, C1, Cs, const):
                             (1j * (-1)) + (C1 + Cs) * Rext * w) * (
                             (1j * (-1)) + C1 * w * (R2 + 1j * L2 * w))) ** (-1)))
     return ret + const
-
-bounds = [(0, 0, 0, 0, 0, -np.inf), (np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)]
-
-starting_point = [0.606, 2.092 * 10 ** (-3), 0.9 * 10 ** (-3), 2.657 * 10 ** (-10), 8.719 * 10 ** (-11), 0.1]
 
 
 plot_data(freq, phase, fit_function=phase_to_freq_fit, starting_points=starting_point, bounds=bounds,

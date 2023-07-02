@@ -1,4 +1,5 @@
 import pandas as pd
+from matplotlib.ticker import MultipleLocator, AutoMinorLocator
 from pandas import read_csv
 from scipy.optimize import curve_fit, least_squares
 from typing import List, Tuple
@@ -37,7 +38,6 @@ def print_fit_data(fit, popt, pcov, xdata, ydata, normal_vec):
     r_squared = 1 - (ss_res / ss_tot)
     k = 0
 
-
     print('\033[96m' + f"printing function [{fit.__name__}] fitting values" + "\033[0m")
     print('\033[1m' + "parameter    value           std         normal factor" + "\033[0m")
     for i, var in enumerate(fit.__code__.co_varnames[1:]):
@@ -48,9 +48,10 @@ def print_fit_data(fit, popt, pcov, xdata, ydata, normal_vec):
 
     n = len(xdata)  # num of observations
     adjusted_r = 1 - (
-            (1 - r_squared) * (n-1) / (n - k - 1)
+            (1 - r_squared) * (n - 1) / (n - k - 1)
     )
     print('\033[92m' + f"printing fit parameters R^2: [{r_squared}] adjusted R^2: [{adjusted_r}]" + "\033[0m")
+
 
 def order_of_magnitude(number):
     return np.floor(np.log10(number))
@@ -86,14 +87,6 @@ def plot_data(x_data: pd.DataFrame,
                 np.power(10, (-1) * magnitude_list),
                 starting_points
             )
-            # normalized_bounds = np.multiply(
-            #     np.power(10, (-1) * magnitude_list),
-            #     bounds
-            # )
-            # normalized_bounds = [
-            #     [float(x) for x in normalized_bounds[0]],
-            #     [float(x) for x in normalized_bounds[1]]
-            # ]
 
             def fit_function_normalizer(x, *args):
                 real_arguments = np.multiply(
@@ -109,7 +102,7 @@ def plot_data(x_data: pd.DataFrame,
             magnitude_list = None
 
         popt, pcov = curve_fit(f=fit_function_normalizer, xdata=x_data, ydata=y_data, p0=normalized_starting_points,
-                               bounds=bounds)
+                               bounds=bounds, maxfev=5000)
         x_sample = np.linspace(x_data.iloc[0], x_data.iloc[-1], 1000)
         try:
             real_popt = np.multiply(
@@ -129,7 +122,8 @@ def plot_data(x_data: pd.DataFrame,
 
     # show graphs
     if residuals:
-        fig, ax = plt.subplots(2,1,figsize=(FIGURE_WIDTH, DOUBLE_FIGURE_HEIGHT), gridspec_kw={'height_ratios': [2, 1]})
+        fig, ax = plt.subplots(2, 1, figsize=(FIGURE_WIDTH, DOUBLE_FIGURE_HEIGHT),
+                               gridspec_kw={'height_ratios': [2, 1]})
         graph_ax = ax[0]
         residuals_ax = ax[1]
     else:
@@ -137,17 +131,15 @@ def plot_data(x_data: pd.DataFrame,
         fig, graph_ax = plt.subplots(1)
 
     fig.tight_layout(pad=4.0)
-    graph_ax.plot(x_data, y_data, 'o', markersize=7, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
+    graph_ax.plot(x_data, y_data, 'o', markersize=5, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
                   label='Measurement')
 
     if fit_function is not None:
         graph_ax.plot(x_sample, fit, '-', color='red', label="Fit", linewidth=3)
-        # x_orange = np.linspace(x_data.iloc[0], x_data.iloc[-1] * 2, 1000)
-        # fit_for_y = fit_function(x_orange, *[10 ** (-3), 65 * 10 ** (-12), 100, 65 * 10 ** (-12)])
-        # graph_ax.plot(x_orange, fit_for_y, '-', color='orange', label="Fit for y", linewidth=3)
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
-    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32, fontweight="bold")
+    graph_ax.set_title(f"${y_data_name}~Measured~as~Function~of~{x_data_name}$", fontname="Arial", size=32,
+                       fontweight="bold")
     graph_ax.legend(loc='best')
     graph_ax.grid()
 
@@ -158,8 +150,6 @@ def plot_data(x_data: pd.DataFrame,
         residuals_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
         residuals_ax.grid()
 
-    plt.yticks(fontsize=20)
-    plt.xticks(fontsize=20)
 
     if graph_dir_path is None or experiment_name is None:
         plt.show()
@@ -168,44 +158,42 @@ def plot_data(x_data: pd.DataFrame,
                     .replace(" ", "_").replace("{", "").replace("}", ""), format="eps")
 
 
+def plot_comparison(data_list: List[Tuple[pd.DataFrame, pd.DataFrame, str]],
+                    graph_dir_path: str = None,
+                    experiment_name: str = ""):
+    COLORS = ["red", "blue", "orange", "pink", "green", "purple"]
 
-
-def plot_comparison(x1_data: pd.DataFrame,
-              y1_data: pd.DataFrame,
-              x2_data: pd.DataFrame,
-              y2_data: pd.DataFrame,
-              graph_dir_path: str = None,
-              experiment_name: str = ""):
-
+    main_data = data_list[0]
     try:
-        x_data_name = x1_data.name.split()[0]
-        x_data_units = x1_data.name.split()[1]
+        x_data_name = main_data[0].name.split()[0]
+        x_data_units = main_data[0].name.split()[1]
     except:
-        x_data_name = x1_data.name
+        x_data_name = main_data[0].name
         x_data_units = ""
     try:
-        y_data_name = y1_data.name.split()[0]
-        y_data_units = y1_data.name.split()[1]
+        y_data_name = main_data[1].name.split()[0]
+        y_data_units = main_data[1].name.split()[1]
     except:
-        y_data_name = y1_data.name
+        y_data_name = main_data[1].name
         y_data_units = ""
 
     plt.rcParams["figure.figsize"] = (FIGURE_WIDTH, FIGURE_HEIGHT)
     fig, graph_ax = plt.subplots(1)
 
     fig.tight_layout(pad=4.0)
-    graph_ax.plot(x1_data, y1_data, 'o', markersize=5, markeredgewidth=1, color='blue', markerfacecolor='lightskyblue',
-                  label='$5.5[cm]$')
+    for i, data in enumerate(data_list):
+        graph_ax.plot(data[0], data[1], '-', color=COLORS[i],
+                      label=f'${data[2]}$')
 
-    graph_ax.plot(x2_data, y2_data, 'o', markersize=5, markeredgewidth=1, color='red', markerfacecolor='yellow',
-                  label='$10[cm]$')
+    graph_ax.grid()
 
     graph_ax.set_xlabel(f'${x_data_name} {x_data_units}$', fontsize=26)
     graph_ax.set_ylabel(f'${y_data_name} {y_data_units}$', fontsize=26)
-    graph_ax.set_title(f"${y_data_name}$ Measured as function of ${x_data_name}$", fontname="Arial", size=32,
+    graph_ax.set_title(f"$|H|~Measured~as~Function~of~{x_data_name}$", fontname="Arial", size=32,
                        fontweight="bold")
     graph_ax.legend(loc='best')
-    graph_ax.grid()
+
+
 
     plt.yticks(fontsize=20)
     plt.xticks(fontsize=20)
@@ -213,6 +201,8 @@ def plot_comparison(x1_data: pd.DataFrame,
     if graph_dir_path is None or experiment_name is None:
         plt.show()
     else:
-        plt.savefig(f"{graph_dir_path}/{experiment_name}-{y1_data.name}-{x1_data.name}.eps"
+        plt.savefig(f"{graph_dir_path}/{experiment_name}-{main_data[1].name}-{main_data[0].name}.eps"
                     .replace(" ", "_").replace("{", "").replace("}", ""), format="eps")
+
+
 

@@ -7,7 +7,7 @@ from plotter import plot_data
 
 # Data Settings
 data_path = './../data/R=47kOhm(big).csv'
-CIRCUIT_NAME = "coil_resistor_47"
+CIRCUIT_NAME = None # "coil_resistor_47"
 # CIRCUIT_NAME = None
 # unpack data
 data_frame = read_csv(data_path)
@@ -46,8 +46,7 @@ def amplitude_to_freq_r_fit(x, L_c, C_c, R_cl, C_s, const):
 starting_point = [0.001917, 34.23 * 10 ** (-11), 67.23, 9.61 * 10 ** (-11), 0.001]
 bounds = [[0, 0, 0, 0, -np.inf], [np.inf, np.inf, np.inf, np.inf, np.inf]]
 
-plot_data(frequency, amplitude, fit_function=amplitude_to_freq_r_fit, starting_points=starting_point,
-            graph_dir_path="./../graphs", experiment_name=CIRCUIT_NAME, bounds=bounds)
+plot_data(frequency, amplitude, graph_dir_path="./../graphs", experiment_name=CIRCUIT_NAME, bounds=bounds)
 
 
 def phase_to_freq_r_fit(x, L_c, C_c, R_cl, C_s, const):
@@ -71,5 +70,5 @@ def phase_to_freq_r_fit(x, L_c, C_c, R_cl, C_s, const):
 # starting_point = [0.0029, 4.95 * 10 ** (-11), 174.52, 42 * 10 ** (-12), 0.1]
 # bounds = [[0, 0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf, np.inf]]
 
-plot_data(frequency, phase, fit_function=phase_to_freq_r_fit, starting_points=starting_point,
+plot_data(frequency, phase, starting_points=starting_point,
            graph_dir_path="./../graphs", experiment_name=CIRCUIT_NAME)

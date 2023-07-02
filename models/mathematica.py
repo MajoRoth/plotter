@@ -1,49 +1,86 @@
 import pandas
 import numpy as np
-from plotter import plot_data
+from plotter import plot_data, plot_comparison
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+
+import scipy.integrate as integrate
 
 # Data Settings
-data_path = './../data/picoscope_internal_resistance_measurement_1KOhm.csv'
 
-experiment_name="internal_resistance"
+name = None
 
 
-def poly(x):
-     x = x / 100
-     a = 0.0005239231436759905
-     b = - 0.11162988067784889
-     c = 28.779375241469147
-     d = - 5501.016162472724
-     e = 594099.1623342653
-     f = - 3.2256761250060298e7
-     g = 8.008527125777614e8
-     h = - 7.772880951154212e9
-     i = 2.023257941657045e10
-     const = 693.2804257303192
+def poly(x, M):
 
-     return const * (a
-                     + b * x ** 2
-                     + c * x ** 4
-                     + d * x ** 6
-                     + e * x ** 8
-                     + f * x ** 10
-                     + g * x ** 12
-                     + h * x ** 14
-                     + i * x ** 16)
+    # R1 = 0.5
+    # R2 = 12
+    #
+    #
+    # w = 2 * np.pi * x
+    #
+    # L1 = 0.3526 * 10 ** (-4)
+    # L2 = 2.553 * 10 ** (-3)
+    # C2 = 2.75 * 19 ** (-10)
+    # Cs = 61.49 * 10 ** (-10)
 
-# preprocess data
-x = np.linspace(0, 9.5, 1000)
-y = poly(x)
-d = {'distance [cm]': x, 'k': y}
-df = pandas.DataFrame(data=d)
+    C1 = 13.4 * 10 ** (-11)
+    C2 = C1
+    R1 = 15
+    R2 = 16
+    Cs = 1.72 * 10 ** (-11)
+    L1 = 1.6 * 10 ** (-3)
+    L2 = 0.91 * 10 ** (-3)
+    w = 2 * np.pi * x * 1000
 
-y_col = df["k"]
-x_col = df["distance [cm]"]
+    return M*w*(w**2*(L1+(C2+Cs)*R1*R2+(C2+Cs)*((-1)*L1*L2+M**2)*w**2)**2+(R1+(-1)*(C2+Cs)*(L2*R1+L1*R2)*w**2)**2)**(-1/2)
+
+columns = list()
+
+M = np.array([52, 35, 18, 13, 7, 5]) * 10 ** (-5)
+CM = [0, 5, 11, 14, 20, 24]
+x = np.linspace(400, 550, 1000)
 
 
 
+FIGURE_WIDTH = 12
+FIGURE_HEIGHT = 12
+DOUBLE_FIGURE_HEIGHT = 18
+FONT = "Arial"
+FONT_WEIGHT = "bold"
+FONT_SIZE = 22
+LINE_WIDTH = 3
+
+# matplotlib settings
+mpl.rcParams['font.family'] = FONT
+mpl.rcParams['font.weight'] = FONT_WEIGHT
+plt.rcParams['font.size'] = FONT_SIZE
+plt.rcParams['axes.linewidth'] = LINE_WIDTH
 
 
-plot_data(x_col, y_col, graph_dir_path="./../graphs", experiment_name="coupling_coeff")
+COLORS = ["red", "blue", "orange", "pink", "green", "purple"]
+
+plt.rcParams["figure.figsize"] = (FIGURE_WIDTH, FIGURE_HEIGHT)
+fig, graph_ax = plt.subplots(1)
+
+
+print(columns)
+
+
+for i, m in enumerate(M):
+    graph_ax.plot(x, poly(x, m), '-', color=COLORS[i],
+                  label=f'${CM[i]} [cm]$')
+
+
+graph_ax.grid()
+
+graph_ax.set_xlabel(f'$Frequency [kHz]$', fontsize=26)
+graph_ax.set_ylabel(f'$|H|$', fontsize=26)
+graph_ax.set_title(f"$|H|~Measured~as~Function~of~Frequency$", fontname="Arial", size=32, fontweight="bold")
+graph_ax.legend(loc='best')
+
+plt.show()
+
 
 
