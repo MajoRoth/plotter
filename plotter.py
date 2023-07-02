@@ -7,6 +7,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 FIGURE_WIDTH = 12
 FIGURE_HEIGHT = 12
 DOUBLE_FIGURE_HEIGHT = 18
